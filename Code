@@ -1,503 +1,1183 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { AlertTriangle, CheckCircle, Clock, Wrench, TrendingUp, Activity } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNC Predictive Maintenance System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-const CNCPredictiveMaintenanceSystem = () => {
-  const [selectedMachine, setSelectedMachine] = useState('CNC-001');
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [maintenanceTasks, setMaintenanceTasks] = useState([
-    { id: 1, machine: 'CNC-001', task: 'Spindle bearing replacement', priority: 'High', dueDate: '2025-08-15', status: 'Pending', predictedFailure: 0.85 },
-    { id: 2, machine: 'CNC-002', task: 'Coolant system check', priority: 'Medium', dueDate: '2025-08-18', status: 'Scheduled', predictedFailure: 0.45 },
-    { id: 3, machine: 'CNC-003', task: 'Tool changer calibration', priority: 'Low', dueDate: '2025-08-20', status: 'Completed', predictedFailure: 0.25 },
-    { id: 4, machine: 'CNC-001', task: 'Vibration sensor replacement', priority: 'High', dueDate: '2025-08-16', status: 'Pending', predictedFailure: 0.78 }
-  ]);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+        }
 
-  // Sample CNC machine data
-  const machineData = {
-    'CNC-001': {
-      status: 'Warning',
-      failureProbability: 0.85,
-      vibration: 8.5,
-      temperature: 75,
-      lastMaintenance: '2025-07-15',
-      operatingHours: 2847,
-      errorCodes: ['E101', 'W205'],
-      sensorData: [
-        { time: '08:00', vibration: 7.2, temperature: 68, pressure: 45 },
-        { time: '10:00', vibration: 7.8, temperature: 71, pressure: 46 },
-        { time: '12:00', vibration: 8.1, temperature: 73, pressure: 44 },
-        { time: '14:00', vibration: 8.5, temperature: 75, pressure: 43 },
-        { time: '16:00', vibration: 8.7, temperature: 76, pressure: 42 }
-      ]
-    },
-    'CNC-002': {
-      status: 'Normal',
-      failureProbability: 0.45,
-      vibration: 6.2,
-      temperature: 68,
-      lastMaintenance: '2025-08-01',
-      operatingHours: 1923,
-      errorCodes: [],
-      sensorData: [
-        { time: '08:00', vibration: 5.8, temperature: 65, pressure: 48 },
-        { time: '10:00', vibration: 6.0, temperature: 67, pressure: 47 },
-        { time: '12:00', vibration: 6.1, temperature: 68, pressure: 48 },
-        { time: '14:00', vibration: 6.2, temperature: 68, pressure: 47 },
-        { time: '16:00', vibration: 6.3, temperature: 69, pressure: 46 }
-      ]
-    },
-    'CNC-003': {
-      status: 'Good',
-      failureProbability: 0.25,
-      vibration: 5.1,
-      temperature: 62,
-      lastMaintenance: '2025-08-05',
-      operatingHours: 1456,
-      errorCodes: [],
-      sensorData: [
-        { time: '08:00', vibration: 4.9, temperature: 60, pressure: 50 },
-        { time: '10:00', vibration: 5.0, temperature: 61, pressure: 49 },
-        { time: '12:00', vibration: 5.1, temperature: 62, pressure: 50 },
-        { time: '14:00', vibration: 5.1, temperature: 62, pressure: 49 },
-        { time: '16:00', vibration: 5.2, temperature: 63, pressure: 48 }
-      ]
-    }
-  };
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Warning': return 'text-orange-500';
-      case 'Critical': return 'text-red-500';
-      case 'Normal': return 'text-yellow-500';
-      case 'Good': return 'text-green-500';
-      default: return 'text-gray-500';
-    }
-  };
+        /* Header Styles */
+        .header {
+            margin-bottom: 32px;
+            animation: fadeIn 0.5s ease-in;
+        }
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Warning':
-      case 'Critical':
-        return <AlertTriangle className="h-5 w-5" />;
-      case 'Good':
-        return <CheckCircle className="h-5 w-5" />;
-      default:
-        return <Activity className="h-5 w-5" />;
-    }
-  };
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+        .header p {
+            color: #6b7280;
+            font-size: 1rem;
+        }
 
-  const updateTaskStatus = (taskId, newStatus) => {
-    setMaintenanceTasks(tasks => 
-      tasks.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
-  };
+        /* Navigation Styles */
+        .nav-container {
+            margin-bottom: 24px;
+        }
 
-  const machineStatusData = Object.entries(machineData).map(([machine, data]) => ({
-    machine,
-    failureProbability: data.failureProbability,
-    status: data.status
-  }));
+        .nav-tabs {
+            display: flex;
+            gap: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
-  const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+        .nav-tab {
+            padding: 12px 16px;
+            font-weight: 500;
+            color: #6b7280;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.2s;
+            border-bottom: 2px solid transparent;
+        }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">CNC Predictive Maintenance System</h1>
-          <p className="text-gray-600">AI-powered maintenance scheduling and failure prediction</p>
+        .nav-tab:hover {
+            color: #374151;
+        }
+
+        .nav-tab.active {
+            color: #2563eb;
+            border-bottom-color: #3b82f6;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+
+        /* Grid Styles */
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        /* Metric Card Styles */
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+        }
+
+        .metric-icon.red { background-color: #fee2e2; color: #dc2626; }
+        .metric-icon.blue { background-color: #dbeafe; color: #2563eb; }
+        .metric-icon.green { background-color: #d1fae5; color: #059669; }
+        .metric-icon.purple { background-color: #e9d5ff; color: #7c3aed; }
+
+        .metric-content h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .metric-content p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* Machine Card Styles */
+        .machine-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .machine-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .machine-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.875rem;
+        }
+
+        .status-warning { color: #f59e0b; }
+        .status-critical { color: #ef4444; }
+        .status-normal { color: #eab308; }
+        .status-good { color: #22c55e; }
+
+        .machine-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .failure-risk {
+            font-weight: 600;
+            color: #dc2626;
+        }
+
+        .error-codes {
+            font-size: 0.875rem;
+            color: #dc2626;
+            margin-top: 8px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .table th {
+            background-color: #f9fafb;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table tr:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Priority Badge Styles */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .priority-high { background-color: #fee2e2; color: #991b1b; }
+        .priority-medium { background-color: #fef3c7; color: #92400e; }
+        .priority-low { background-color: #dcfce7; color: #166534; }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            text-align: center;
+        }
+
+        .calendar-header {
+            font-weight: 600;
+            color: #374151;
+            padding: 8px;
+        }
+
+        .calendar-day {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            height: 80px;
+            position: relative;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .calendar-event {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            font-size: 0.75rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .event-high { background-color: #fee2e2; color: #991b1b; }
+        .event-medium { background-color: #fef3c7; color: #92400e; }
+
+        /* Form Elements */
+        .select {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        /* Utility Classes */
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Machine Selector */
+        .machine-selector {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .machine-btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .machine-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .machine-btn:not(.active) {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .machine-btn:not(.active):hover {
+            background-color: #e5e7eb;
+        }
+
+        /* Analytics Cards */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            text-align: center;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        .analytics-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .analytics-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .analytics-value.green { color: #059669; }
+        .analytics-value.orange { color: #ea580c; }
+        .analytics-value.blue { color: #2563eb; }
+
+        .analytics-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Cost Analysis */
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .cost-total {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .cost-savings {
+            font-weight: 700;
+            color: #059669;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .machine-selector {
+                justify-content: center;
+            }
+            
+            .grid-4,
+            .grid-3,
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>CNC Predictive Maintenance System</h1>
+            <p>AI-powered maintenance scheduling and failure prediction</p>
         </div>
 
-        {/* Navigation */}
-        <div className="mb-6">
-          <div className="flex space-x-4 border-b border-gray-200">
-            {['dashboard', 'machines', 'maintenance', 'analytics'].map((view) => (
-              <button
-                key={view}
-                onClick={() => setCurrentView(view)}
-                className={`py-2 px-4 font-medium capitalize ${
-                  currentView === view
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {view}
-              </button>
-            ))}
-          </div>
+        <!-- Navigation -->
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showView('dashboard')" id="tab-dashboard">Dashboard</button>
+                <button class="nav-tab" onclick="showView('machines')" id="tab-machines">Machines</button>
+                <button class="nav-tab" onclick="showView('maintenance')" id="tab-maintenance">Maintenance</button>
+                <button class="nav-tab" onclick="showView('analytics')" id="tab-analytics">Analytics</button>
+            </div>
         </div>
 
-        {currentView === 'dashboard' && (
-          <div className="space-y-6">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Critical Alerts</h3>
-                    <p className="text-2xl font-bold text-gray-900">2</p>
-                  </div>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view-content">
+            <!-- Key Metrics -->
+            <div class="grid grid-4 fade-in">
+                <div class="metric-card">
+                    <div class="metric-icon red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Critical Alerts</h3>
+                        <p class="alert-pulse">2</p>
+                    </div>
                 </div>
-              </div>
-              
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Wrench className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Scheduled Tasks</h3>
-                    <p className="text-2xl font-bold text-gray-900">4</p>
-                  </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon blue">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Scheduled Tasks</h3>
+                        <p>4</p>
+                    </div>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Uptime</h3>
-                    <p className="text-2xl font-bold text-gray-900">94.2%</p>
-                  </div>
+                <div class="metric-card">
+                    <div class="metric-icon green">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Uptime</h3>
+                        <p>94.2%</p>
+                    </div>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Activity className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Active Machines</h3>
-                    <p className="text-2xl font-bold text-gray-900">3/3</p>
-                  </div>
+                <div class="metric-card">
+                    <div class="metric-icon purple">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Active Machines</h3>
+                        <p>3/3</p>
+                    </div>
                 </div>
-              </div>
             </div>
 
-            {/* Machine Status Overview */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Machine Health Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {Object.entries(machineData).map(([machine, data]) => (
-                  <div key={machine} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{machine}</h3>
-                      <div className={`flex items-center ${getStatusColor(data.status)}`}>
-                        {getStatusIcon(data.status)}
-                        <span className="ml-1 text-sm">{data.status}</span>
-                      </div>
+            <!-- Machine Status Overview -->
+            <div class="card fade-in">
+                <h2>Machine Health Overview</h2>
+                <div class="grid grid-3">
+                    <div class="machine-card">
+                        <div class="machine-header">
+                            <div class="machine-name">CNC-001</div>
+                            <div class="status-badge status-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Warning</span>
+                            </div>
+                        </div>
+                        <div class="machine-details">
+                            <div>Failure Risk: <span class="failure-risk">85.0%</span></div>
+                            <div>Vibration: 8.5 mm/s</div>
+                            <div>Temperature: 75°C</div>
+                            <div>Operating Hours: 2847</div>
+                            <div class="error-codes">Active Errors: E101, W205</div>
+                        </div>
                     </div>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <p>Failure Risk: <span className="font-semibold text-red-600">{(data.failureProbability * 100).toFixed(1)}%</span></p>
-                      <p>Vibration: {data.vibration} mm/s</p>
-                      <p>Temperature: {data.temperature}°C</p>
-                      <p>Operating Hours: {data.operatingHours}</p>
+
+                    <div class="machine-card">
+                        <div class="machine-header">
+                            <div class="machine-name">CNC-002</div>
+                            <div class="status-badge status-normal">
+                                <i class="fas fa-cog"></i>
+                                <span>Normal</span>
+                            </div>
+                        </div>
+                        <div class="machine-details">
+                            <div>Failure Risk: <span class="failure-risk">45.0%</span></div>
+                            <div>Vibration: 6.2 mm/s</div>
+                            <div>Temperature: 68°C</div>
+                            <div>Operating Hours: 1923</div>
+                        </div>
                     </div>
-                    {data.errorCodes.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm text-red-600">Active Errors: {data.errorCodes.join(', ')}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+
+                    <div class="machine-card">
+                        <div class="machine-header">
+                            <div class="machine-name">CNC-003</div>
+                            <div class="status-badge status-good">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Good</span>
+                            </div>
+                        </div>
+                        <div class="machine-details">
+                            <div>Failure Risk: <span class="failure-risk">25.0%</span></div>
+                            <div>Vibration: 5.1 mm/s</div>
+                            <div>Temperature: 62°C</div>
+                            <div>Operating Hours: 1456</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Failure Probability Chart */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Failure Probability by Machine</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={machineStatusData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="machine" />
-                  <YAxis domain={[0, 1]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
-                  <Tooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Failure Probability']} />
-                  <Bar dataKey="failureProbability" fill="#ef4444" />
-                </BarChart>
-              </ResponsiveContainer>
+            <!-- Failure Probability Chart -->
+            <div class="card fade-in">
+                <h2>Failure Probability by Machine</h2>
+                <div class="chart-container">
+                    <canvas id="failureProbabilityChart"></canvas>
+                </div>
             </div>
-          </div>
-        )}
+        </div>
 
-        {currentView === 'machines' && (
-          <div className="space-y-6">
-            {/* Machine Selector */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Machine Details</h2>
-              <div className="flex space-x-4 mb-6">
-                {Object.keys(machineData).map((machine) => (
-                  <button
-                    key={machine}
-                    onClick={() => setSelectedMachine(machine)}
-                    className={`px-4 py-2 rounded-lg ${
-                      selectedMachine === machine
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {machine}
-                  </button>
-                ))}
-              </div>
-
-              {/* Selected Machine Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{selectedMachine} Status</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <div className={`flex items-center ${getStatusColor(machineData[selectedMachine].status)}`}>
-                        {getStatusIcon(machineData[selectedMachine].status)}
-                        <span className="ml-1">{machineData[selectedMachine].status}</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Failure Probability:</span>
-                      <span className="font-semibold text-red-600">
-                        {(machineData[selectedMachine].failureProbability * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Current Vibration:</span>
-                      <span>{machineData[selectedMachine].vibration} mm/s</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Temperature:</span>
-                      <span>{machineData[selectedMachine].temperature}°C</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Operating Hours:</span>
-                      <span>{machineData[selectedMachine].operatingHours}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Last Maintenance:</span>
-                      <span>{machineData[selectedMachine].lastMaintenance}</span>
-                    </div>
-                  </div>
+        <!-- Machines View -->
+        <div id="machines-view" class="view-content hidden">
+            <div class="card">
+                <h2>Machine Details</h2>
+                <div class="machine-selector">
+                    <button class="machine-btn active" onclick="selectMachine('CNC-001')">CNC-001</button>
+                    <button class="machine-btn" onclick="selectMachine('CNC-002')">CNC-002</button>
+                    <button class="machine-btn" onclick="selectMachine('CNC-003')">CNC-003</button>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Real-time Sensor Data</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={machineData[selectedMachine].sensorData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="vibration" stroke="#ef4444" name="Vibration (mm/s)" />
-                      <Line type="monotone" dataKey="temperature" stroke="#f97316" name="Temperature (°C)" />
-                      <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure (bar)" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentView === 'maintenance' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Maintenance Schedule</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Failure Risk</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {maintenanceTasks.map((task) => (
-                      <tr key={task.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{task.machine}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.task}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.dueDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
-                          {(task.predictedFailure * 100).toFixed(1)}%
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.status}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <select
-                            value={task.status}
-                            onChange={(e) => updateTaskStatus(task.id, e.target.value)}
-                            className="border rounded px-2 py-1 text-sm"
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Scheduled">Scheduled</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Maintenance Calendar View */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Maintenance</h2>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-2 text-center">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <div key={day} className="font-semibold text-gray-700 py-2">{day}</div>
-                ))}
-                {Array.from({length: 35}, (_, i) => (
-                  <div key={i} className="border p-2 h-20 relative">
-                    <span className="text-sm text-gray-600">{((i % 31) + 1)}</span>
-                    {i === 14 && (
-                      <div className="absolute bottom-1 left-1 right-1 bg-red-100 text-red-800 text-xs p-1 rounded">
-                        CNC-001 Maint.
-                      </div>
-                    )}
-                    {i === 17 && (
-                      <div className="absolute bottom-1 left-1 right-1 bg-yellow-100 text-yellow-800 text-xs p-1 rounded">
-                        CNC-002 Check
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentView === 'analytics' && (
-          <div className="space-y-6">
-            {/* ML Model Performance */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">ML Model Performance</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Model Accuracy</h3>
-                  <p className="text-3xl font-bold text-green-600">94.2%</p>
-                  <p className="text-sm text-gray-500">Last 30 days</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900">False Positives</h3>
-                  <p className="text-3xl font-bold text-orange-600">3.8%</p>
-                  <p className="text-sm text-gray-500">Acceptable range</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Prevented Failures</h3>
-                  <p className="text-3xl font-bold text-blue-600">7</p>
-                  <p className="text-sm text-gray-500">This month</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Cost Savings Analysis */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Cost Impact Analysis</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Monthly Savings</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Prevented Downtime:</span>
-                      <span className="font-semibold text-green-600">$12,500</span>
+                <div class="grid grid-2">
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px;" id="selected-machine-name">CNC-001 Status</h3>
+                        <div class="machine-details" id="machine-status-details">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Status:</span>
+                                <div class="status-badge status-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Warning</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Failure Probability:</span>
+                                <span class="failure-risk">85.0%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Current Vibration:</span>
+                                <span>8.5 mm/s</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Temperature:</span>
+                                <span>75°C</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Operating Hours:</span>
+                                <span>2847</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Last Maintenance:</span>
+                                <span>2025-07-15</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Optimized Maintenance:</span>
-                      <span className="font-semibold text-green-600">$3,200</span>
+
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px;">Real-time Sensor Data</h3>
+                        <div class="chart-container">
+                            <canvas id="sensorDataChart"></canvas>
+                        </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Reduced Emergency Repairs:</span>
-                      <span className="font-semibold text-green-600">$8,700</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between">
-                      <span className="font-semibold">Total Savings:</span>
-                      <span className="font-bold text-green-600">$24,400</span>
-                    </div>
-                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Failure Types Distribution</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Bearing Failure', value: 35, fill: '#ef4444' },
-                          { name: 'Coolant Issues', value: 25, fill: '#f97316' },
-                          { name: 'Tool Wear', value: 20, fill: '#eab308' },
-                          { name: 'Electrical', value: 20, fill: '#22c55e' }
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {[{ fill: '#ef4444' }, { fill: '#f97316' }, { fill: '#eab308' }, { fill: '#22c55e' }].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+            </div>
+        </div>
+
+        <!-- Maintenance View -->
+        <div id="maintenance-view" class="view-content hidden">
+            <div class="card">
+                <h2>Maintenance Schedule</h2>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Machine</th>
+                                <th>Task</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                                <th>Failure Risk</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 600;">CNC-001</td>
+                                <td>Spindle bearing replacement</td>
+                                <td><span class="priority-badge priority-high">High</span></td>
+                                <td>2025-08-15</td>
+                                <td class="failure-risk">85.0%</td>
+                                <td>Pending</td>
+                                <td>
+                                    <select class="select" onchange="updateTaskStatus(this, 1)">
+                                        <option value="Pending" selected>Pending</option>
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">CNC-002</td>
+                                <td>Coolant system check</td>
+                                <td><span class="priority-badge priority-medium">Medium</span></td>
+                                <td>2025-08-18</td>
+                                <td class="failure-risk">45.0%</td>
+                                <td>Scheduled</td>
+                                <td>
+                                    <select class="select" onchange="updateTaskStatus(this, 2)">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Scheduled" selected>Scheduled</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">CNC-003</td>
+                                <td>Tool changer calibration</td>
+                                <td><span class="priority-badge priority-low">Low</span></td>
+                                <td>2025-08-20</td>
+                                <td class="failure-risk">25.0%</td>
+                                <td>Completed</td>
+                                <td>
+                                    <select class="select" onchange="updateTaskStatus(this, 3)">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed" selected>Completed</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">CNC-001</td>
+                                <td>Vibration sensor replacement</td>
+                                <td><span class="priority-badge priority-high">High</span></td>
+                                <td>2025-08-16</td>
+                                <td class="failure-risk">78.0%</td>
+                                <td>Pending</td>
+                                <td>
+                                    <select class="select" onchange="updateTaskStatus(this, 4)">
+                                        <option value="Pending" selected>Pending</option>
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-              </div>
             </div>
 
-            {/* Feature Importance */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">ML Model Feature Importance</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={[
-                    { feature: 'Vibration Pattern', importance: 0.32 },
-                    { feature: 'Temperature Trend', importance: 0.28 },
-                    { feature: 'Operating Hours', importance: 0.18 },
-                    { feature: 'Error Frequency', importance: 0.12 },
-                    { feature: 'Pressure Variance', importance: 0.10 }
-                  ]}
-                  layout="horizontal"
-                  margin={{ left: 100 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 0.4]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
-                  <YAxis type="category" dataKey="feature" width={100} />
-                  <Tooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Importance']} />
-                  <Bar dataKey="importance" fill="#3b82f6" />
-                </BarChart>
-              </ResponsiveContainer>
+            <!-- Maintenance Calendar -->
+            <div class="card">
+                <h2>Upcoming Maintenance</h2>
+                <div class="calendar-grid">
+                    <div class="calendar-header">Mon</div>
+                    <div class="calendar-header">Tue</div>
+                    <div class="calendar-header">Wed</div>
+                    <div class="calendar-header">Thu</div>
+                    <div class="calendar-header">Fri</div>
+                    <div class="calendar-header">Sat</div>
+                    <div class="calendar-header">Sun</div>
+                    
+                    <!-- Calendar days -->
+                    <div class="calendar-day">1</div>
+                    <div class="calendar-day">2</div>
+                    <div class="calendar-day">3</div>
+                    <div class="calendar-day">4</div>
+                    <div class="calendar-day">5</div>
+                    <div class="calendar-day">6</div>
+                    <div class="calendar-day">7</div>
+                    <div class="calendar-day">8</div>
+                    <div class="calendar-day">9</div>
+                    <div class="calendar-day">10</div>
+                    <div class="calendar-day">11</div>
+                    <div class="calendar-day">12</div>
+                    <div class="calendar-day">13</div>
+                    <div class="calendar-day">14</div>
+                    <div class="calendar-day">15
+                        <div class="calendar-event event-high">CNC-001 Maint.</div>
+                    </div>
+                    <div class="calendar-day">16</div>
+                    <div class="calendar-day">17</div>
+                    <div class="calendar-day">18
+                        <div class="calendar-event event-medium">CNC-002 Check</div>
+                    </div>
+                    <div class="calendar-day">19</div>
+                    <div class="calendar-day">20</div>
+                    <div class="calendar-day">21</div>
+                    <div class="calendar-day">22</div>
+                    <div class="calendar-day">23</div>
+                    <div class="calendar-day">24</div>
+                    <div class="calendar-day">25</div>
+                    <div class="calendar-day">26</div>
+                    <div class="calendar-day">27</div>
+                    <div class="calendar-day">28</div>
+                    <div class="calendar-day">29</div>
+                    <div class="calendar-day">30</div>
+                    <div class="calendar-day">31</div>
+                </div>
             </div>
-          </div>
-        )}
-      </div>
+        </div>
+
+        <!-- Analytics View -->
+        <div id="analytics-view" class="view-content hidden">
+            <!-- ML Model Performance -->
+            <div class="card">
+                <h2>ML Model Performance</h2>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Model Accuracy</h3>
+                        <div class="analytics-value green">94.2%</div>
+                        <div class="analytics-subtitle">Last 30 days</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>False Positives</h3>
+                        <div class="analytics-value orange">3.8%</div>
+                        <div class="analytics-subtitle">Acceptable range</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Prevented Failures</h3>
+                        <div class="analytics-value blue">7</div>
+                        <div class="analytics-subtitle">This month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Impact Analysis -->
+            <div class="card">
+                <h2>Cost Impact Analysis</h2>
+                <div class="grid grid-2">
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px;">Monthly Savings</h3>
+                        <div>
+                            <div class="cost-item">
+                                <span>Prevented Downtime:</span>
+                                <span class="cost-savings">$12,500</span>
+                            </div>
+                            <div class="cost-item">
+                                <span>Optimized Maintenance:</span>
+                                <span class="cost-savings">$3,200</span>
+                            </div>
+                            <div class="cost-item">
+                                <span>Reduced Emergency Repairs:</span>
+                                <span class="cost-savings">$8,700</span>
+                            </div>
+                            <div class="cost-item cost-total">
+                                <span style="font-weight: 600;">Total Savings:</span>
+                                <span style="font-weight: 700;" class="cost-savings">$24,400</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px;">Failure Types Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="failureTypesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Importance -->
+            <div class="card">
+                <h2>ML Model Feature Importance</h2>
+                <div class="chart-container">
+                    <canvas id="featureImportanceChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-  );
-};
 
-export default CNCPredictiveMaintenanceSystem;
+    <script>
+        // Global variables
+        let currentView = 'dashboard';
+        let selectedMachine = 'CNC-001';
+        let charts = {};
+
+        // Machine data
+        const machineData = {
+            'CNC-001': {
+                status: 'Warning',
+                statusClass: 'status-warning',
+                icon: 'fas fa-exclamation-triangle',
+                failureProbability: 85.0,
+                vibration: 8.5,
+                temperature: 75,
+                operatingHours: 2847,
+                lastMaintenance: '2025-07-15',
+                errorCodes: ['E101', 'W205']
+            },
+            'CNC-002': {
+                status: 'Normal',
+                statusClass: 'status-normal',
+                icon: 'fas fa-cog',
+                failureProbability: 45.0,
+                vibration: 6.2,
+                temperature: 68,
+                operatingHours: 1923,
+                lastMaintenance: '2025-08-01',
+                errorCodes: []
+            },
+            'CNC-003': {
+                status: 'Good',
+                statusClass: 'status-good',
+                icon: 'fas fa-check-circle',
+                failureProbability: 25.0,
+                vibration: 5.1,
+                temperature: 62,
+                operatingHours: 1456,
+                lastMaintenance: '2025-08-05',
+                errorCodes: []
+            }
+        };
+
+        // Navigation functions
+        function showView(viewName) {
+            // Hide all views
+            const views = document.querySelectorAll('.view-content');
+            views.forEach(view => view.classList.add('hidden'));
+            
+            // Show selected view
+            document.getElementById(viewName + '-view').classList.remove('hidden');
+            
+            // Update nav tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + viewName).classList.add('active');
+            
+            currentView = viewName;
+            
+            // Initialize charts for the view
+            if (viewName === 'dashboard') {
+                initializeDashboardCharts();
+            } else if (viewName === 'machines') {
+                initializeMachineCharts();
+            } else if (viewName === 'analytics') {
+                initializeAnalyticsCharts();
+            }
+        }
+
+        // Machine selection
+        function selectMachine(machineName) {
+            selectedMachine = machineName;
+            
+            // Update machine selector buttons
+            const buttons = document.querySelectorAll('.machine-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update machine details
+            updateMachineDetails(machineName);
+            
+            // Update sensor chart
+            updateSensorChart(machineName);
+        }
+
+        function updateMachineDetails(machineName) {
+            const machine = machineData[machineName];
+            
+            // Update machine name
+            document.getElementById('selected-machine-name').textContent = machineName + ' Status';
+            
+            // Update status details
+            const detailsContainer = document.getElementById('machine-status-details');
+            detailsContainer.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span>Status:</span>
+                    <div class="status-badge ${machine.statusClass}">
+                        <i class="${machine.icon}"></i>
+                        <span>${machine.status}</span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span>Failure Probability:</span>
+                    <span class="failure-risk">${machine.failureProbability}%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span>Current Vibration:</span>
+                    <span>${machine.vibration} mm/s</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span>Temperature:</span>
+                    <span>${machine.temperature}°C</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span>Operating Hours:</span>
+                    <span>${machine.operatingHours}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Last Maintenance:</span>
+                    <span>${machine.lastMaintenance}</span>
+                </div>
+            `;
+        }
+
+        // Task status update
+        function updateTaskStatus(selectElement, taskId) {
+            const newStatus = selectElement.value;
+            const row = selectElement.closest('tr');
+            const statusCell = row.cells[5];
+            statusCell.textContent = newStatus;
+            
+            // Add visual feedback
+            row.style.backgroundColor = '#f0f9ff';
+            setTimeout(() => {
+                row.style.backgroundColor = '';
+            }, 1000);
+        }
+
+        // Chart initialization functions
+        function initializeDashboardCharts() {
+            // Failure Probability Chart
+            const ctx = document.getElementById('failureProbabilityChart');
+            if (ctx && !charts.failureProbability) {
+                charts.failureProbability = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['CNC-001', 'CNC-002', 'CNC-003'],
+                        datasets: [{
+                            label: 'Failure Probability (%)',
+                            data: [85, 45, 25],
+                            backgroundColor: '#ef4444',
+                            borderColor: '#dc2626',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initializeMachineCharts() {
+            updateSensorChart(selectedMachine);
+        }
+
+        function updateSensorChart(machineName) {
+            const ctx = document.getElementById('sensorDataChart');
+            if (ctx) {
+                // Destroy existing chart
+                if (charts.sensorData) {
+                    charts.sensorData.destroy();
+                }
+                
+                // Sample sensor data based on machine
+                const sensorData = generateSensorData(machineName);
+                
+                charts.sensorData = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['08:00', '10:00', '12:00', '14:00', '16:00'],
+                        datasets: [
+                            {
+                                label: 'Vibration (mm/s)',
+                                data: sensorData.vibration,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Temperature (°C)',
+                                data: sensorData.temperature,
+                                borderColor: '#f97316',
+                                backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Pressure (bar)',
+                                data: sensorData.pressure,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function generateSensorData(machineName) {
+            const machine = machineData[machineName];
+            const baseVibration = machine.vibration;
+            const baseTemp = machine.temperature;
+            
+            return {
+                vibration: [
+                    baseVibration - 1.3,
+                    baseVibration - 0.7,
+                    baseVibration - 0.4,
+                    baseVibration,
+                    baseVibration + 0.2
+                ],
+                temperature: [
+                    baseTemp - 7,
+                    baseTemp - 4,
+                    baseTemp - 2,
+                    baseTemp,
+                    baseTemp + 1
+                ],
+                pressure: [50, 49, 48, 47, 46]
+            };
+        }
+
+        function initializeAnalyticsCharts() {
+            // Failure Types Pie Chart
+            const pieCtx = document.getElementById('failureTypesChart');
+            if (pieCtx && !charts.failureTypes) {
+                charts.failureTypes = new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Bearing Failure', 'Coolant Issues', 'Tool Wear', 'Electrical'],
+                        datasets: [{
+                            data: [35, 25, 20, 20],
+                            backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Feature Importance Bar Chart
+            const barCtx = document.getElementById('featureImportanceChart');
+            if (barCtx && !charts.featureImportance) {
+                charts.featureImportance = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Vibration Pattern', 'Temperature Trend', 'Operating Hours', 'Error Frequency', 'Pressure Variance'],
+                        datasets: [{
+                            label: 'Importance (%)',
+                            data: [32, 28, 18, 12, 10],
+                            backgroundColor: '#3b82f6',
+                            borderColor: '#2563eb',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 40,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show dashboard by default
+            showView('dashboard');
+            
+            // Add some interactive animations
+            const cards = document.querySelectorAll('.card, .metric-card, .machine-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                });
+            });
+        });
+
+        // Resize charts when window is resized
+        window.addEventListener('resize', function() {
+            Object.values(charts).forEach(chart => {
+                if (chart) chart.resize();
+            });
+        });
+    </script>
+</body>
+</html>
