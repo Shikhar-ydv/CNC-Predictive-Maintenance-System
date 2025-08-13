@@ -1,0 +1,503 @@
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { AlertTriangle, CheckCircle, Clock, Wrench, TrendingUp, Activity } from 'lucide-react';
+
+const CNCPredictiveMaintenanceSystem = () => {
+  const [selectedMachine, setSelectedMachine] = useState('CNC-001');
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [maintenanceTasks, setMaintenanceTasks] = useState([
+    { id: 1, machine: 'CNC-001', task: 'Spindle bearing replacement', priority: 'High', dueDate: '2025-08-15', status: 'Pending', predictedFailure: 0.85 },
+    { id: 2, machine: 'CNC-002', task: 'Coolant system check', priority: 'Medium', dueDate: '2025-08-18', status: 'Scheduled', predictedFailure: 0.45 },
+    { id: 3, machine: 'CNC-003', task: 'Tool changer calibration', priority: 'Low', dueDate: '2025-08-20', status: 'Completed', predictedFailure: 0.25 },
+    { id: 4, machine: 'CNC-001', task: 'Vibration sensor replacement', priority: 'High', dueDate: '2025-08-16', status: 'Pending', predictedFailure: 0.78 }
+  ]);
+
+  // Sample CNC machine data
+  const machineData = {
+    'CNC-001': {
+      status: 'Warning',
+      failureProbability: 0.85,
+      vibration: 8.5,
+      temperature: 75,
+      lastMaintenance: '2025-07-15',
+      operatingHours: 2847,
+      errorCodes: ['E101', 'W205'],
+      sensorData: [
+        { time: '08:00', vibration: 7.2, temperature: 68, pressure: 45 },
+        { time: '10:00', vibration: 7.8, temperature: 71, pressure: 46 },
+        { time: '12:00', vibration: 8.1, temperature: 73, pressure: 44 },
+        { time: '14:00', vibration: 8.5, temperature: 75, pressure: 43 },
+        { time: '16:00', vibration: 8.7, temperature: 76, pressure: 42 }
+      ]
+    },
+    'CNC-002': {
+      status: 'Normal',
+      failureProbability: 0.45,
+      vibration: 6.2,
+      temperature: 68,
+      lastMaintenance: '2025-08-01',
+      operatingHours: 1923,
+      errorCodes: [],
+      sensorData: [
+        { time: '08:00', vibration: 5.8, temperature: 65, pressure: 48 },
+        { time: '10:00', vibration: 6.0, temperature: 67, pressure: 47 },
+        { time: '12:00', vibration: 6.1, temperature: 68, pressure: 48 },
+        { time: '14:00', vibration: 6.2, temperature: 68, pressure: 47 },
+        { time: '16:00', vibration: 6.3, temperature: 69, pressure: 46 }
+      ]
+    },
+    'CNC-003': {
+      status: 'Good',
+      failureProbability: 0.25,
+      vibration: 5.1,
+      temperature: 62,
+      lastMaintenance: '2025-08-05',
+      operatingHours: 1456,
+      errorCodes: [],
+      sensorData: [
+        { time: '08:00', vibration: 4.9, temperature: 60, pressure: 50 },
+        { time: '10:00', vibration: 5.0, temperature: 61, pressure: 49 },
+        { time: '12:00', vibration: 5.1, temperature: 62, pressure: 50 },
+        { time: '14:00', vibration: 5.1, temperature: 62, pressure: 49 },
+        { time: '16:00', vibration: 5.2, temperature: 63, pressure: 48 }
+      ]
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Warning': return 'text-orange-500';
+      case 'Critical': return 'text-red-500';
+      case 'Normal': return 'text-yellow-500';
+      case 'Good': return 'text-green-500';
+      default: return 'text-gray-500';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'Warning':
+      case 'Critical':
+        return <AlertTriangle className="h-5 w-5" />;
+      case 'Good':
+        return <CheckCircle className="h-5 w-5" />;
+      default:
+        return <Activity className="h-5 w-5" />;
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Medium': return 'bg-yellow-100 text-yellow-800';
+      case 'Low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const updateTaskStatus = (taskId, newStatus) => {
+    setMaintenanceTasks(tasks => 
+      tasks.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      )
+    );
+  };
+
+  const machineStatusData = Object.entries(machineData).map(([machine, data]) => ({
+    machine,
+    failureProbability: data.failureProbability,
+    status: data.status
+  }));
+
+  const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">CNC Predictive Maintenance System</h1>
+          <p className="text-gray-600">AI-powered maintenance scheduling and failure prediction</p>
+        </div>
+
+        {/* Navigation */}
+        <div className="mb-6">
+          <div className="flex space-x-4 border-b border-gray-200">
+            {['dashboard', 'machines', 'maintenance', 'analytics'].map((view) => (
+              <button
+                key={view}
+                onClick={() => setCurrentView(view)}
+                className={`py-2 px-4 font-medium capitalize ${
+                  currentView === view
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {view}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {currentView === 'dashboard' && (
+          <div className="space-y-6">
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <AlertTriangle className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Critical Alerts</h3>
+                    <p className="text-2xl font-bold text-gray-900">2</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Wrench className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Scheduled Tasks</h3>
+                    <p className="text-2xl font-bold text-gray-900">4</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <TrendingUp className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Uptime</h3>
+                    <p className="text-2xl font-bold text-gray-900">94.2%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Activity className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Active Machines</h3>
+                    <p className="text-2xl font-bold text-gray-900">3/3</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Machine Status Overview */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Machine Health Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {Object.entries(machineData).map(([machine, data]) => (
+                  <div key={machine} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900">{machine}</h3>
+                      <div className={`flex items-center ${getStatusColor(data.status)}`}>
+                        {getStatusIcon(data.status)}
+                        <span className="ml-1 text-sm">{data.status}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>Failure Risk: <span className="font-semibold text-red-600">{(data.failureProbability * 100).toFixed(1)}%</span></p>
+                      <p>Vibration: {data.vibration} mm/s</p>
+                      <p>Temperature: {data.temperature}°C</p>
+                      <p>Operating Hours: {data.operatingHours}</p>
+                    </div>
+                    {data.errorCodes.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-red-600">Active Errors: {data.errorCodes.join(', ')}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Failure Probability Chart */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Failure Probability by Machine</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={machineStatusData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="machine" />
+                  <YAxis domain={[0, 1]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
+                  <Tooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Failure Probability']} />
+                  <Bar dataKey="failureProbability" fill="#ef4444" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'machines' && (
+          <div className="space-y-6">
+            {/* Machine Selector */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Machine Details</h2>
+              <div className="flex space-x-4 mb-6">
+                {Object.keys(machineData).map((machine) => (
+                  <button
+                    key={machine}
+                    onClick={() => setSelectedMachine(machine)}
+                    className={`px-4 py-2 rounded-lg ${
+                      selectedMachine === machine
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {machine}
+                  </button>
+                ))}
+              </div>
+
+              {/* Selected Machine Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{selectedMachine} Status</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <div className={`flex items-center ${getStatusColor(machineData[selectedMachine].status)}`}>
+                        {getStatusIcon(machineData[selectedMachine].status)}
+                        <span className="ml-1">{machineData[selectedMachine].status}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Failure Probability:</span>
+                      <span className="font-semibold text-red-600">
+                        {(machineData[selectedMachine].failureProbability * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Vibration:</span>
+                      <span>{machineData[selectedMachine].vibration} mm/s</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Temperature:</span>
+                      <span>{machineData[selectedMachine].temperature}°C</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Operating Hours:</span>
+                      <span>{machineData[selectedMachine].operatingHours}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Last Maintenance:</span>
+                      <span>{machineData[selectedMachine].lastMaintenance}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Real-time Sensor Data</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={machineData[selectedMachine].sensorData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="vibration" stroke="#ef4444" name="Vibration (mm/s)" />
+                      <Line type="monotone" dataKey="temperature" stroke="#f97316" name="Temperature (°C)" />
+                      <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure (bar)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'maintenance' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Maintenance Schedule</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Failure Risk</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {maintenanceTasks.map((task) => (
+                      <tr key={task.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{task.machine}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.task}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.dueDate}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
+                          {(task.predictedFailure * 100).toFixed(1)}%
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.status}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <select
+                            value={task.status}
+                            onChange={(e) => updateTaskStatus(task.id, e.target.value)}
+                            className="border rounded px-2 py-1 text-sm"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Scheduled">Scheduled</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Maintenance Calendar View */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Maintenance</h2>
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-2 text-center">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                  <div key={day} className="font-semibold text-gray-700 py-2">{day}</div>
+                ))}
+                {Array.from({length: 35}, (_, i) => (
+                  <div key={i} className="border p-2 h-20 relative">
+                    <span className="text-sm text-gray-600">{((i % 31) + 1)}</span>
+                    {i === 14 && (
+                      <div className="absolute bottom-1 left-1 right-1 bg-red-100 text-red-800 text-xs p-1 rounded">
+                        CNC-001 Maint.
+                      </div>
+                    )}
+                    {i === 17 && (
+                      <div className="absolute bottom-1 left-1 right-1 bg-yellow-100 text-yellow-800 text-xs p-1 rounded">
+                        CNC-002 Check
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'analytics' && (
+          <div className="space-y-6">
+            {/* ML Model Performance */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">ML Model Performance</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Model Accuracy</h3>
+                  <p className="text-3xl font-bold text-green-600">94.2%</p>
+                  <p className="text-sm text-gray-500">Last 30 days</p>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900">False Positives</h3>
+                  <p className="text-3xl font-bold text-orange-600">3.8%</p>
+                  <p className="text-sm text-gray-500">Acceptable range</p>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Prevented Failures</h3>
+                  <p className="text-3xl font-bold text-blue-600">7</p>
+                  <p className="text-sm text-gray-500">This month</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Cost Savings Analysis */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Cost Impact Analysis</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Monthly Savings</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Prevented Downtime:</span>
+                      <span className="font-semibold text-green-600">$12,500</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Optimized Maintenance:</span>
+                      <span className="font-semibold text-green-600">$3,200</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Reduced Emergency Repairs:</span>
+                      <span className="font-semibold text-green-600">$8,700</span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between">
+                      <span className="font-semibold">Total Savings:</span>
+                      <span className="font-bold text-green-600">$24,400</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Failure Types Distribution</h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Bearing Failure', value: 35, fill: '#ef4444' },
+                          { name: 'Coolant Issues', value: 25, fill: '#f97316' },
+                          { name: 'Tool Wear', value: 20, fill: '#eab308' },
+                          { name: 'Electrical', value: 20, fill: '#22c55e' }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {[{ fill: '#ef4444' }, { fill: '#f97316' }, { fill: '#eab308' }, { fill: '#22c55e' }].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Importance */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">ML Model Feature Importance</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={[
+                    { feature: 'Vibration Pattern', importance: 0.32 },
+                    { feature: 'Temperature Trend', importance: 0.28 },
+                    { feature: 'Operating Hours', importance: 0.18 },
+                    { feature: 'Error Frequency', importance: 0.12 },
+                    { feature: 'Pressure Variance', importance: 0.10 }
+                  ]}
+                  layout="horizontal"
+                  margin={{ left: 100 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 0.4]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
+                  <YAxis type="category" dataKey="feature" width={100} />
+                  <Tooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Importance']} />
+                  <Bar dataKey="importance" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CNCPredictiveMaintenanceSystem;
