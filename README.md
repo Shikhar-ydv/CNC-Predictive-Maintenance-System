@@ -1,2 +1,7 @@
 # CNC-Predictive-Maintenance-System
-To develop a data-driven system that predicts CNC machine failures before they occur, enabling proactive maintenance scheduling, minimizing downtime, and improving production efficiency.
+The CNC Predictive Maintenance System leverages machine learning to analyze sensor data from CNC machines and predict potential failures before they occur. By monitoring vibration patterns, temperature fluctuations, operating hours, and error frequencies, the system provides actionable insights for maintenance teams to prevent costly downtime.
+# Key Features 
+ Real-Time Monitoring
+ AI-Powered Predictions
+ Intelligent Scheduling
+ Advanced Analytics
